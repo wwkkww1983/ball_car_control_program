@@ -1148,12 +1148,12 @@ void Machine_Speed_Set(uint16_t DutycycleL,uint16_t DutycycleR)
 	uint16_t TimerPeriod = 0;
 	uint16_t Channel1Pulse = 0, Channel2Pulse = 0;
 	TimerPeriod = (SystemCoreClock / SPEED_TIMER_PERIOD);
-  /* Compute CCR1 value to generate a duty cycle at Dutycycle‰ for channel 1 and 1N */
-  Channel1Pulse = (uint16_t) (((uint32_t) (250-DutycycleL )* (TimerPeriod)) / 250);
-  /* Compute CCR2 value to generate a duty cycle at Dutycycle‰  for channel 2 and 2N */
-  Channel2Pulse = (uint16_t) (((uint32_t) (250-DutycycleR ) * (TimerPeriod)) / 250);
+	/* Compute CCR1 value to generate a duty cycle at Dutycycle‰ for channel 1 and 1N */
+	Channel1Pulse = (uint16_t) (((uint32_t) (250-DutycycleL )* (TimerPeriod)) / 250);
+	/* Compute CCR2 value to generate a duty cycle at Dutycycle‰  for channel 2 and 2N */
+	Channel2Pulse = (uint16_t) (((uint32_t) (250-DutycycleR ) * (TimerPeriod)) / 250);
 	TIM5->CCR2 = Channel2Pulse;  
-  TIM5->CCR1 = Channel1Pulse;
+	TIM5->CCR1 = Channel1Pulse;
 }
 
 /** 功能：前轮的方向控制
