@@ -52,3 +52,4 @@
 .\io_toggle\main.o: ..\user\speed.h
 .\io_toggle\main.o: ..\user\break.h
 .\io_toggle\main.o: ..\user\port.h
+.\io_toggle\main.o: ..\stm32f10x_it.h

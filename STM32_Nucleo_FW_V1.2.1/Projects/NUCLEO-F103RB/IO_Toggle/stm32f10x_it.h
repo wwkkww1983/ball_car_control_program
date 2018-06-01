@@ -32,8 +32,12 @@
 
 #define USART_REC_LEN 50
 #define DATA_BEGIN 2
+#define MAX_SPEED_COUNT 100
+
 /* Exported types ------------------------------------------------------------*/
 extern __IO uint8_t Control_By_Steeringwheel_Or_UWB_Flag;  // if flag is 1 then Follow  if flag is 0 then drive
+extern __IO uint32_t Speed_Left_Count;
+extern __IO uint32_t Speed_Right_Count;
 	 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

@@ -77,37 +77,6 @@ void Manual_Change_Machine_Back_or_Forward_Init(void)
 
 
 
-__IO uint32_t Speed_Right_Count = 0;//右边轮子的脉冲值
 
-void EXTI9_5_IRQHandler(void)
-{
-	OSIntEnter();		//OSIntExit();
-  if(EXTI_GetITStatus(EXTI_Line7) != RESET)
-  {
-		if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_7)) //1的时候刹车处于放开的状态
-		{
-		  Manual_Break_State = 1;
-			//printf("manual break 1\r\n");
-		}
-		else if(!GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_7)) //0的时候刹车处于踩下的状态
-		{
-			Manual_Break_State = 0;
-			//printf("manual break 0\r\n");
-		}
-    EXTI_ClearITPendingBit(EXTI_Line7);
-  }
-	if(EXTI_GetITStatus(EXTI_Line6) != RESET)
-	{
-		//if(!GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_6))
-		{
-		   Speed_Right_Count++;
-		}
-		if(Speed_Right_Count == MAX_SPEED_COUNT)
-		{
-			//OSSemPost(Sem_Event); //发送信号量
-		}		   
-	  //printf("Speed_Right_Count:%d\r\n",Speed_Right_Count);
-		EXTI_ClearITPendingBit(EXTI_Line6);
-	}
-	OSIntExit();
-}
+
+

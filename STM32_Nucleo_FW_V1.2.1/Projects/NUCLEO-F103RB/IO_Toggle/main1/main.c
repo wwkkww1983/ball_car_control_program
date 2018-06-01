@@ -9,6 +9,7 @@
 #include "break.h"
 #include "includes.h"
 #include "port.h"
+#include "stm32f10x_it.h"
 
 static __IO  uint8_t Index = NONEINDEX ;  // 0   up   1  mid    2   down
 static __IO uint32_t TimingDelay;
@@ -278,6 +279,8 @@ int main(void)
 			 //Electric_Push_Rod_Down();
 			 Electric_Push_Rod_Stop();
 			 
+			 Machine_Motor_PG_Dectected_Init();
+			 
 			 MIC_Motor_Init();
 			 MIC_Motor_Close_Detected_Init();
 			 
@@ -530,7 +533,6 @@ void Backmotor_Power_OFF(void)
 {
 	GPIO_ResetBits(backmotor_power_port,switch_backmotor_power_io_out);
 }
-
 /*后轮电源*/
 
 
@@ -1071,17 +1073,59 @@ uint8_t Machine_Motor_Alarm_Detected(void)
 	return temp;
 }
 
-/*功能：后轮电机PG初始化
+/*功能：后轮电机PG初始化 PD8 PD9
+ *  
  */
 void Machine_Motor_PG_Dectected_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;	
-	GPIO_InitStructure.GPIO_Pin =  pg_right_motor_io_input;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitTypeDef  GPIO_InitStructure;
+  EXTI_InitTypeDef  EXTI_InitStructure;
+  NVIC_InitTypeDef  NVIC_InitStructure;  
 	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+	GPIO_InitStructure.GPIO_Pin =  pg_right_motor_io_input;//PD8
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
 	GPIO_Init(right_motor_port, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin =  pg_left_motor_io_input;
+	
+	/* Enable AFIO clock */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+  /* Connect EXTI8 Line to PD8 pin */
+  GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource8);
+  
+  /* Configure EXTI8 line */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line8;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+  
+  /* Enable and set EXTI0 Interrupt to the lowest priority */
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 11;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+  	
+	GPIO_InitStructure.GPIO_Pin =  pg_left_motor_io_input;//PD9
 	GPIO_Init(left_motor_port, &GPIO_InitStructure);
+	
+	/* Connect EXTI9 Line to PD8 pin */
+  GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource9);
+  
+  /* Configure EXTI9 line */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line9;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+  
+  /* Enable and set EXTI0 Interrupt to the lowest priority */
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 12;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+	
 }
 
 /*功能：后轮PG检测
@@ -1090,6 +1134,7 @@ void Machine_Motor_PG_Dectected_Init(void)
 uint8_t Machine_Motor_PG_Dectected(void)
 {
 	uint8_t temp;
+	
 	return temp;
 }
 
@@ -1628,8 +1673,7 @@ void BOX_TASK(void *pdata)//拉箱任务
 	}
 }
 
-extern __IO uint32_t Speed_Left_Count;
-extern __IO uint32_t Speed_Right_Count;
+
 OS_EVENT * Sem_Event;
 
 void Send_Task(void *pdata)//串口发送数据给上位机的任务
@@ -1637,8 +1681,8 @@ void Send_Task(void *pdata)//串口发送数据给上位机的任务
 	pdata = pdata;
 	u8 err;
 	char sendbuf[20];
-	uint32_t time=0;
-	uint32_t speed=0;
+	uint32_t time_s = 0;
+	uint32_t speed = 0;
 	OS_SEM_DATA result[1];
 	OS_ENTER_CRITICAL();
   Sem_Event = OSSemCreate(0);	
@@ -1647,10 +1691,23 @@ void Send_Task(void *pdata)//串口发送数据给上位机的任务
 	printf("Sem_Event count:%d\r\n",result->OSCnt);
 	while(1)
 	{
-		Speed_Left_Count = 0;
-		Speed_Right_Count = 0;
-	  //OSTimeSet(0);//设置软件定时器为0
-		OSSemPend(Sem_Event,0,&err);
+		OSSemPend(Sem_Event,0,&err);//信号会1ms发一次过来。
+		//time_s ++ ;//1ms 加一次
+		//if(1000 == time_s)
+		{
+			speed = ((Speed_Right_Count+Speed_Left_Count)>>1)*1000;
+			
+//			printf("Speed_Left_Count:%d\r\n",Speed_Left_Count) ;
+//			printf("Speed_Right_Count:%d\r\n",Speed_Right_Count) ;
+//			printf("speed:%d\r\n",speed);
+//			sprintf(sendbuf,"s:%d\r\n",speed);		
+//			OSSchedLock();
+//			SendDatatoMaster((uint8_t *)sendbuf);
+//			OSSchedUnlock();
+      Speed_Left_Count = 0;
+		  Speed_Right_Count = 0;			
+			//time_s = 0;
+		}
 		///time = OSTimeGet();
 		//speed = ((Speed_Right_Count+Speed_Left_Count)>>1)*1000/(time+1);
 		//sprintf(sendbuf,"s:%d\r\n",speed);
@@ -1703,7 +1760,6 @@ void EmergencyStop_Task(void *pdata)
 			}
 			else if(0 == state)
 			{
-				    
 						//Middle_Motor_Stop();
 						//Electric_Push_Rod_Stop();
 						Machine_Front_Motor_Enable_or_Disable(ENABLE);

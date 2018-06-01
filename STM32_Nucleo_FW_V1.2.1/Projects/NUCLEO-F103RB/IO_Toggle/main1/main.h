@@ -208,9 +208,7 @@ u16 Get_battery_temperature_Adc(u8 ch);
 
 /***/
 void SendDatatoMaster(uint8_t sendbuf[]);
-
-
-
+void Machine_Motor_PG_Dectected_Init(void);
 
 #endif /* __MAIN_H */
 

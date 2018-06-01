@@ -251,25 +251,25 @@ void Machine_GetSpeed_Init(void)
 }
 
 
-__IO uint32_t Speed_Left_Count  = 0;//左边的轮子的脉冲值
-void EXTI15_10_IRQHandler(void)
-{
-	OSIntEnter();		//OSIntExit();
-	if(EXTI_GetITStatus(EXTI_Line11) != RESET)
-  { 
-		//if(!GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_11))
-		{
-		   Speed_Left_Count++;
-		}  
-		if(Speed_Left_Count == MAX_SPEED_COUNT)
-		{
-			OSSemPost(Sem_Event); //发送信号量
-		}
-	  //printf("Speed_Left_Count:%d\r\n",Speed_Left_Count);
-    EXTI_ClearITPendingBit(EXTI_Line11);
-  }
-	OSIntExit();	
-}
+
+//void EXTI15_10_IRQHandler(void)
+//{
+//	OSIntEnter();		//OSIntExit();
+//	if(EXTI_GetITStatus(EXTI_Line11) != RESET)
+//  { 
+//		//if(!GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_11))
+//		{
+//		   Speed_Left_Count++;
+//		}  
+//		if(Speed_Left_Count == MAX_SPEED_COUNT)
+//		{
+//			OSSemPost(Sem_Event); //发送信号量
+//		}
+//	  //printf("Speed_Left_Count:%d\r\n",Speed_Left_Count);
+//    EXTI_ClearITPendingBit(EXTI_Line11);
+//  }
+//	OSIntExit();	
+//}
 
 
 

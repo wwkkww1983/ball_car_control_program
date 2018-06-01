@@ -224,7 +224,6 @@ static __IO SPEEDQUEUE_TYPE SpeedType;
 extern __IO u8 TrunEnableFlag; 
 //uint8_t Break_Flag=0;
 
-
 __IO uint8_t Control_By_Steeringwheel_Or_UWB_Flag=0;
 void USART1_IRQHandler(void)      //串口1中断服务程序
 {
@@ -322,8 +321,40 @@ void USART1_IRQHandler(void)      //串口1中断服务程序
 	  USART_ClearITPendingBit(USART1,USART_IT_RXNE );
   }
     OSIntExit();        //触发任务切换软中断	
-} 
+}
 
+/* 功能：两个驱动器的PG的脉冲中断计算
+ */
+
+__IO uint32_t Speed_Right_Count = 0;//右边轮子的脉冲值
+__IO uint32_t Speed_Left_Count  = 0;//左边的轮子的脉冲值
+
+void EXTI9_5_IRQHandler(void)
+{
+	OSIntEnter();                     //OSIntExit();
+  if(EXTI_GetITStatus(EXTI_Line9) != RESET) // PD9 左轮
+  {
+		//if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_7)) //1的时候刹车处于放开的状态
+		{
+		  Speed_Left_Count++;
+		}
+    EXTI_ClearITPendingBit(EXTI_Line9);
+  }
+	if(EXTI_GetITStatus(EXTI_Line8) != RESET) //PD8 右轮
+	{
+		//if(!GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_6))
+		{
+		   Speed_Right_Count++;
+		}
+		if(Speed_Right_Count == MAX_SPEED_COUNT)
+		{
+			//OSSemPost(Sem_Event); //发送信号量
+		}		   
+	  //printf("Speed_Right_Count:%d\r\n",Speed_Right_Count);
+		EXTI_ClearITPendingBit(EXTI_Line8);
+	}
+	OSIntExit();
+}
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

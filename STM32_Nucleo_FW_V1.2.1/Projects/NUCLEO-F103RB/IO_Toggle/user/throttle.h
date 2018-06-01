@@ -31,7 +31,7 @@ After_filter[6]---PC4---IN14---ÎÂ¶È¼ì²âµÄµçÑ¹
  
 #define N  1
 #define M  2
-#define MAX_SPEED_COUNT 100
+
 void Throttle_Adc_Init(void);
 u16  Get_Throttle_Adc(u8 ch);  
 void Machine_GetSpeed_Init(void);
